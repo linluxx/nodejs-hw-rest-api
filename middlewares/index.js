@@ -8,10 +8,10 @@ function validateBody(schema) {
   };
 }
 
-function tryCatchWrapper(enpointFn) {
+function tryCatchWrapper(endpointFn) {
   return async (req, res, next) => {
     try {
-      await enpointFn(req, res, next);
+      await endpointFn(req, res, next);
     } catch (error) {
       return next(error);
     }

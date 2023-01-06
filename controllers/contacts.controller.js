@@ -9,7 +9,7 @@ async function getContact(req, res, next) {
   const id = req.params.contactId;
   const contact = await db.getContactById(id);
   if (!contact) {
-    return next(res.status(404).json({ message: "Contact not found!" }));
+    return res.status(404).json({ message: "Contact not found!" });
   }
 
   return res.status(300).json(contact);
@@ -25,10 +25,10 @@ async function deleteContact(req, res, next) {
   const id = req.params.contactId;
   const contact = await db.getContactById(id);
   if (!contact) {
-    res.status(404).json({ message: "Contact not found!" });
+    return res.status(404).json({ message: "Contact not found!" });
   }
   await db.removeContact(id);
-  res.status(200).json({ "Contact was successfully deleted!": contact });
+  res.status(200).json(contact);
 }
 
 async function updateContact(req, res, next) {
@@ -36,7 +36,7 @@ async function updateContact(req, res, next) {
   const body = req.body;
   const updatedContact = await db.updateContact(contactId, body);
   if (!updatedContact) {
-    return res.status(200).json({ message: "Not found" });
+    return res.status(400).json({ message: "Not found" });
   }
   return res.status(200).json(updatedContact);
 }
