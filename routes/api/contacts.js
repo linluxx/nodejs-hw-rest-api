@@ -5,9 +5,13 @@ const {
   getContacts,
   deleteContact,
   createContact,
+  updateContact,
 } = require("../../controllers/contacts.controller");
 const { validateBody } = require("../../middlewares");
-const { addContactSchema } = require("../../schemas/contacts");
+const {
+  addContactSchema,
+  updateContactSchema,
+} = require("../../schemas/contacts");
 
 const router = express.Router();
 
@@ -20,8 +24,10 @@ router.post(
 );
 router.delete("/:contactId", tryCatchWrapper(deleteContact));
 
-// router.put("/:contactId", async (req, res, next) => {
-//   res.json({ message: "template message" });
-// });
+router.put(
+  "/:contactId",
+  validateBody(updateContactSchema),
+  tryCatchWrapper(updateContact)
+);
 
 module.exports = router;

@@ -18,8 +18,7 @@ async function getContact(req, res, next) {
 async function createContact(req, res, next) {
   const { name, email, phone } = req.body;
   const newContact = db.addContact(name, email, phone);
-  res.status(201).json(newContact);
-  console.log(newContact);
+  return res.status(201).json(newContact);
 }
 
 async function deleteContact(req, res, next) {
@@ -32,4 +31,20 @@ async function deleteContact(req, res, next) {
   res.status(200).json({ "Contact was successfully deleted!": contact });
 }
 
-module.exports = { getContact, getContacts, deleteContact, createContact };
+async function updateContact(req, res, next) {
+  const { contactId } = req.params;
+  const body = req.body;
+  const updatedContact = await db.updateContact(contactId, body);
+  if (!updatedContact) {
+    return res.status(200).json({ message: "Not found" });
+  }
+  return res.status(200).json(updatedContact);
+}
+
+module.exports = {
+  getContact,
+  getContacts,
+  deleteContact,
+  createContact,
+  updateContact,
+};
