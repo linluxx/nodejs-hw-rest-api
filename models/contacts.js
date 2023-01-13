@@ -1,56 +1,24 @@
-const fs = require("fs/promises");
-const path = require("path");
-const { nanoid } = require("nanoid");
+const mongoose = require("mongoose");
 
-const contactsPath = path.resolve(__dirname, "./contacts.json");
+const schema = mongoose.Schema({
+  name: {
+    type: String,
+    required: [true, "Set name for contact"],
+  },
+  email: {
+    type: String,
+  },
+  phone: {
+    type: String,
+  },
+  favorite: {
+    type: Boolean,
+    default: false,
+  },
+});
 
-const listContacts = async () => {
-  const contactsRaw = await fs.readFile(contactsPath);
-  const contactsList = JSON.parse(contactsRaw);
-  return contactsList;
-};
-
-const getContactById = async (contactId) => {
-  const contactsList = await listContacts();
-  const currentContact = contactsList.find(
-    (contact) => contact.id === contactId
-  );
-  return currentContact;
-};
-
-const removeContact = async (contactId) => {
-  const contactsList = await listContacts();
-  const updateContacts = contactsList.filter(
-    (contact) => contact.id !== contactId.toString()
-  );
-  await fs.writeFile(contactsPath, JSON.stringify(updateContacts, null, 2));
-};
-
-const addContact = async (name, email, phone) => {
-  const id = nanoid();
-  const contact = { id, name, email, phone };
-  const contactsList = await listContacts();
-  contactsList.push(contact);
-  await fs.writeFile(contactsPath, JSON.stringify(contactsList, null, 2));
-};
-
-const updateContact = async (contactId, body) => {
-  const contactsList = await listContacts();
-  contactsList.forEach((contact) => {
-    if (contact.id === contactId.toString()) {
-      contact.name = body.name;
-      contact.email = body.email;
-      contact.phone = body.phone;
-    }
-  });
-  await fs.writeFile(contactsPath, JSON.stringify(contactsList, null, 2));
-  return contactsList.find((contact) => contact.id === contactId);
-};
+const Contacts = mongoose.model("contacts", schema);
 
 module.exports = {
-  listContacts,
-  getContactById,
-  removeContact,
-  addContact,
-  updateContact,
+  Contacts,
 };
