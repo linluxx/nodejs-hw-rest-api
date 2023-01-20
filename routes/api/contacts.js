@@ -8,7 +8,7 @@ const {
   updateContact,
   updateStatusContact,
 } = require("../../controllers/contacts.controller");
-const { validateBody } = require("../../middlewares");
+const { validateBody, auth } = require("../../middlewares");
 const {
   addContactSchema,
   updateContactSchema,
@@ -17,10 +17,11 @@ const {
 
 const router = express.Router();
 
-router.get("/", tryCatchWrapper(getContacts));
+router.get("/", auth, tryCatchWrapper(getContacts));
 router.get("/:contactId", tryCatchWrapper(getContact));
 router.post(
   "/",
+  auth,
   validateBody(addContactSchema),
   tryCatchWrapper(createContact)
 );
