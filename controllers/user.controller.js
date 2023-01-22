@@ -61,12 +61,6 @@ async function logout(req, res, next) {
   const { _id } = req.user;
   const userForLogout = await Users.findByIdAndUpdate(_id, { token: null });
   console.log(userForLogout);
-
-  if (!userForLogout) {
-    res.status(401).json({
-      message: "Not authorized",
-    });
-  }
   res.status(204).json();
 }
 
