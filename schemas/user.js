@@ -10,7 +10,12 @@ const loginSchema = Joi.object({
   password: Joi.string().required(),
 });
 
+const updateSubscriptionSchema = Joi.object({
+  subscription: Joi.string().required(),
+});
+
 module.exports = {
   loginSchema,
   registerSchema,
+  updateSubscriptionSchema,
 };

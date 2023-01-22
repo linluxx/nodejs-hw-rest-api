@@ -37,7 +37,7 @@ async function login(req, res, next) {
     return res.status(401).json({ message: "Email or password is wrong" });
   }
   const token = jwt.sign({ id: existedUser._id }, process.env.JWT_SECRET, {
-    expiresIn: "15m",
+    expiresIn: "1h",
   });
   return res.status(200).json({
     token: token,
@@ -70,9 +70,39 @@ async function logout(req, res, next) {
   res.status(204).json();
 }
 
+async function subscriptionStatusUpdate(req, res, next) {
+  const body = req.body;
+  const subscription = body.subscription;
+  const { _id, email } = req.user;
+
+  const types = ["starter", "pro", "business"];
+  for (const type of types) {
+    if (subscription === type) {
+      const updatedSubscription = await Users.findByIdAndUpdate(_id, body, {
+        new: true,
+      });
+      if (!updatedSubscription) {
+        return res.status(404).json({
+          message: "Not found",
+        });
+      }
+      return res.status(200).json({
+        user: {
+          email,
+          subscription: updatedSubscription.subscription,
+        },
+      });
+    }
+  }
+  return res
+    .status(404)
+    .json({ message: "This type of subscription does not exist. Try again" });
+}
+
 module.exports = {
   register,
   login,
   current,
   logout,
+  subscriptionStatusUpdate,
 };
