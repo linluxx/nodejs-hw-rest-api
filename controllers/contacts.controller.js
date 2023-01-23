@@ -1,8 +1,15 @@
 const { Contacts } = require("../models/contacts");
 
 async function getContacts(req, res) {
-  const contacts = await Contacts.find();
-  res.status(200).json(contacts);
+  const { limit = 10, page = 1, favorite } = req.query;
+  const skip = (page - 1) * limit;
+  if (favorite) {
+    const favoriteContacts = await Contacts.find({ favorite: true });
+    return res.status(200).json(favoriteContacts);
+  }
+
+  const contacts = await Contacts.find().skip(skip).limit(limit);
+  return res.status(200).json(contacts);
 }
 
 async function getContact(req, res, next) {
