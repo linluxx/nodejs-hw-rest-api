@@ -1,4 +1,9 @@
 const jwt = require("jsonwebtoken");
+const { JWT_SECRET } = process.env;
+const multer = require("multer");
+const path = require("path");
+const Jimp = require("jimp");
+
 const { Users } = require("../models/users");
 
 function validateBody(schema) {
@@ -35,7 +40,7 @@ async function auth(req, res, next) {
     });
   }
   try {
-    const { id } = jwt.verify(token, process.env.JWT_SECRET);
+    const { id } = jwt.verify(token, JWT_SECRET);
     const user = await Users.findById(id);
     if (!user) {
       return res.status(401).json({
@@ -58,8 +63,37 @@ async function auth(req, res, next) {
   next();
 }
 
+const storage = multer.diskStorage({
+  destination: function (req, file, cb) {
+    cb(null, path.resolve(__dirname, "../tmp"));
+  },
+  filename: function (req, file, cb) {
+    const { _id } = req.user;
+    cb(null, _id + file.originalname);
+  },
+});
+
+const upload = multer({
+  storage,
+});
+
+async function resizeAvatar(req, res, next) {
+  const { path } = req.file;
+
+  try {
+    const avatar = await Jimp.read(path);
+    const resizedAvatar = avatar.resize(250, 250);
+    await resizedAvatar.writeAsync(path);
+  } catch (error) {
+    return res.status(400).json({ message: error.message });
+  }
+  next();
+}
+
 module.exports = {
   validateBody,
   tryCatchWrapper,
   auth,
+  upload,
+  resizeAvatar,
 };
