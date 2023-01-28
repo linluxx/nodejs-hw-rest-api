@@ -5,8 +5,15 @@ const {
   current,
   logout,
   subscriptionStatusUpdate,
+  updateAvatar,
 } = require("../../controllers/user.controller");
-const { tryCatchWrapper, validateBody, auth } = require("../../middlewares");
+const {
+  tryCatchWrapper,
+  validateBody,
+  auth,
+  upload,
+  resizeAvatar,
+} = require("../../middlewares");
 const {
   loginSchema,
   registerSchema,
@@ -27,6 +34,13 @@ authRouter.patch(
   auth,
   validateBody(updateSubscriptionSchema),
   tryCatchWrapper(subscriptionStatusUpdate)
+);
+authRouter.patch(
+  "/avatars",
+  auth,
+  upload.single("avatar"),
+  tryCatchWrapper(resizeAvatar),
+  tryCatchWrapper(updateAvatar)
 );
 
 module.exports = {
