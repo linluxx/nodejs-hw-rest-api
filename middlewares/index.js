@@ -1,8 +1,9 @@
 const jwt = require("jsonwebtoken");
-const { JWT_SECRET } = process.env;
+const { JWT_SECRET, EMAIL_USER, EMAIL_PASS } = process.env;
 const multer = require("multer");
 const path = require("path");
 const Jimp = require("jimp");
+const nodemailer = require("nodemailer");
 
 const { Users } = require("../models/users");
 
@@ -90,7 +91,28 @@ async function resizeAvatar(req, res, next) {
   next();
 }
 
+async function sendMail({ to, subject, html }) {
+  const email = {
+    from: "support@myphonebook.com",
+    to,
+    subject,
+    html,
+  };
+
+  const transport = nodemailer.createTransport({
+    host: "sandbox.smtp.mailtrap.io",
+    port: 2525,
+    auth: {
+      user: EMAIL_USER,
+      pass: EMAIL_PASS,
+    },
+  });
+
+  await transport.sendMail(email);
+}
+
 module.exports = {
+  sendMail,
   validateBody,
   tryCatchWrapper,
   auth,
