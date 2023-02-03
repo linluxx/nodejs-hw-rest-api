@@ -7,6 +7,7 @@ const {
   subscriptionStatusUpdate,
   updateAvatar,
   verification,
+  reverification,
 } = require("../../controllers/user.controller");
 const {
   tryCatchWrapper,
@@ -48,6 +49,8 @@ authRouter.get(
   "/verify/:verificationToken",
   tryCatchWrapper(verification)
 );
+
+authRouter.post("/verify", tryCatchWrapper(reverification));
 
 module.exports = {
   authRouter,

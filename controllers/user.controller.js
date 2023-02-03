@@ -50,7 +50,9 @@ async function login(req, res, next) {
   }
 
   if (!existedUser.verify) {
-    return res.status(401).json({ message: "Email is not verified. Please check your mail box" });
+    return res
+      .status(401)
+      .json({ message: "Email is not verified. Please check your mail box" });
   }
   const isPasswordValid = await bcrypt.compare(password, existedUser.password);
   if (!isPasswordValid) {
@@ -150,6 +152,31 @@ async function verification(req, res, next) {
   return res.status(200).json({ message: "Verification successful" });
 }
 
+async function reverification(req, res, next) {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: "missing required field email" });
+  }
+  const user = await Users.findOne({
+    email,
+  });
+
+  const { verificationToken, verify } = user;
+
+  if (verify) {
+    return res
+      .status(400)
+      .json({ message: "Verification has already been passed" });
+  }
+  await sendMail({
+    to: email,
+    subject: "Email confirmation",
+    html: `<a href="localhost:3000/users/verify/${verificationToken}">Please confirm your email</a>`,
+  });
+
+  return res.status(200).json({ message: "Verification email sent" });
+}
+
 module.exports = {
   register,
   login,
@@ -158,4 +185,5 @@ module.exports = {
   logout,
   subscriptionStatusUpdate,
   updateAvatar,
+  reverification,
 };
