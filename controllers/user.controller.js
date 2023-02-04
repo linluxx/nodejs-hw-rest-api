@@ -4,6 +4,8 @@ const jwt = require("jsonwebtoken");
 const path = require("path");
 const fs = require("fs/promises");
 const gravatar = require("gravatar");
+const { v4 } = require("uuid");
+const { sendMail } = require("../middlewares");
 
 const { JWT_SECRET } = process.env;
 
@@ -13,10 +15,18 @@ async function register(req, res, next) {
   const hashedPassword = await bcrypt.hash(password, salt);
   const avatar = gravatar.url(email, { protocol: "http" });
   try {
+    const verificationToken = v4();
     const savedUser = await Users.create({
       email,
       password: hashedPassword,
       avatarURL: avatar,
+      verificationToken,
+    });
+
+    await sendMail({
+      to: email,
+      subject: "Email confirmation",
+      html: `<a href="localhost:3000/users/verify/${verificationToken}">Please confirm your email</a>`,
     });
     res.status(201).json({
       user: {
@@ -37,6 +47,12 @@ async function login(req, res, next) {
   const existedUser = await Users.findOne({ email });
   if (!existedUser) {
     return res.status(401).json({ message: "Email or password is wrong" });
+  }
+
+  if (!existedUser.verify) {
+    return res
+      .status(401)
+      .json({ message: "Email is not verified. Please check your mail box" });
   }
   const isPasswordValid = await bcrypt.compare(password, existedUser.password);
   if (!isPasswordValid) {
@@ -112,9 +128,6 @@ async function updateAvatar(req, res, next) {
       { avatarURL: `/avatars/${filename}` },
       { new: true }
     );
-    if (!user) {
-      return res.status(401).json({ message: "Not authorized" });
-    }
 
     return res.status(200).json({ avatarURL: `/avatars/${filename}` });
   } catch (error) {
@@ -124,11 +137,53 @@ async function updateAvatar(req, res, next) {
   }
 }
 
+async function verification(req, res, next) {
+  const { verificationToken } = req.params;
+  const user = await Users.findOne({
+    verificationToken: verificationToken,
+  });
+  if (!user) {
+    return res.status(404).json({ message: "User not found" });
+  }
+  await Users.findByIdAndUpdate(user._id, {
+    verify: true,
+    verificationToken: null,
+  });
+  return res.status(200).json({ message: "Verification successful" });
+}
+
+async function reverification(req, res, next) {
+  const { email } = req.body;
+  if (!email) {
+    return res.status(400).json({ message: "missing required field email" });
+  }
+  const user = await Users.findOne({
+    email,
+  });
+
+  const { verificationToken, verify } = user;
+
+  if (verify) {
+    return res
+      .status(400)
+      .json({ message: "Verification has already been passed" });
+  }
+  await sendMail({
+    to: email,
+    subject: "Email confirmation",
+    html: `<a href="localhost:3000/users/verify/${verificationToken}">Please confirm your email</a>`,
+  });
+
+  return res.status(200).json({ message: "Verification email sent" });
+}
+
 module.exports = {
   register,
   login,
   current,
+  verification,
   logout,
   subscriptionStatusUpdate,
   updateAvatar,
+  reverification,
 };
